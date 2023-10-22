@@ -30,14 +30,16 @@ p {
 a {
     letter-spacing: 0.02rem;
 }
-
+body{
+    background-color: #D1E0ED;
+}
 /* Navbar */
 .navbar {
     position: absolute;
     top: 0;
     width: 100%;
     padding: 0.4rem;
-    background-color: #6e00be;
+    background-color: #5D7D99;
     z-index: 1000;
 }
 
@@ -47,7 +49,7 @@ a {
 }
 
 .navbar-color-section {
-    background-color: #6e00be;
+    background-color: #5D7D99;
 }
 
 .nav-item {
