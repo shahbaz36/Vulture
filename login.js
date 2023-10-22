@@ -23,5 +23,12 @@ links.forEach(link => {
 link.addEventListener("click", e => {
  e.preventDefault(); //preventing form submit
  forms.classList.toggle("show-signup");
+
+ // Toggle the text content of the link
+ if (link.textContent === "Sign up") {
+  link.textContent = "Login";
+} else {
+  link.textContent = "Sign up";
+}
 })
 })
