@@ -1,6 +1,7 @@
 const ZapClient = require('zaproxy');
+const catchAsync = require('./catchAsync');
 
-const apiKey = 'dgahc0lcvtgrbvp49i3gccq2sl';
+const apiKey = 'uh9v6fpv2kng2aiq9tjk1dt9tq';
 const target = 'https://kaif-imteyaz.github.io/MLH-4.0/';
 
 const zapOptions = {
@@ -12,8 +13,8 @@ const zapOptions = {
 };
 const zaproxy = new ZapClient(zapOptions);
 
-exports.runZAPScan = async (req,res)=> {
-  try {
+exports.runZAPScan =catchAsync( async (req,res)=> {
+
     // Wait until the passive scan has finished
     while (parseInt(await zaproxy.pscan.recordsToScan()) > 0) {
       console.log('Records to passive scan: ' + (await zaproxy.pscan.recordsToScan()));
@@ -28,12 +29,17 @@ exports.runZAPScan = async (req,res)=> {
     console.log('Hosts: ' + hosts.join(', '));
 
     const alerts = await zaproxy.core.alerts(target);
-    console.log('Alerts:');
-    res.json(alerts);
-  } catch (error) {
-    console.error('Error occurred: ' + error.message);
-  }
-}
 
+    if(alerts === null){
+      return res.status(200).json({
+        status : 'success',
+        alerts : 'No alerts found'
+      });
+    }
 
+    res.status(200).json({
+      status : 'success',
+      alerts : alerts
+    });
 
+});
