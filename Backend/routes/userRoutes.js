@@ -8,6 +8,6 @@ router.post("/signup", authController.signup);
 
 router.post("/login",authController.login);
 
-router.get('/scan',zapScanner.runZAPScan);
+router.get('/scan',zapScanner.scriptRunner);
 
 module.exports = router;

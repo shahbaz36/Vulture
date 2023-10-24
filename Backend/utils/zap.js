@@ -1,45 +1,21 @@
-const ZapClient = require('zaproxy');
-const catchAsync = require('./catchAsync');
+const { spawn } = require('child_process');
 
-const apiKey = 'uh9v6fpv2kng2aiq9tjk1dt9tq';
-const target = 'https://kaif-imteyaz.github.io/MLH-4.0/';
+exports.scriptRunner = (req, res) => {
 
-const zapOptions = {
-  apiKey: apiKey,
-  proxy: {
-    host: '127.0.0.1',
-    port: 8080,
-  }
-};
-const zaproxy = new ZapClient(zapOptions);
+  target= req.body.target;
 
-exports.runZAPScan =catchAsync( async (req,res)=> {
-
-    // Wait until the passive scan has finished
-    while (parseInt(await zaproxy.pscan.recordsToScan()) > 0) {
-      console.log('Records to passive scan: ' + (await zaproxy.pscan.recordsToScan()));
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Sleep for 2 seconds
-    }
-
-    console.log('Passive Scan completed');
-
-    // Print Passive scan results/alerts
-    const hostsData = await zaproxy.core.hosts();
-    const hosts = Object.keys(hostsData).map(key => hostsData[key].host);
-    console.log('Hosts: ' + hosts.join(', '));
-
-    const alerts = await zaproxy.core.alerts(target);
-
-    if(alerts === null){
-      return res.status(200).json({
-        status : 'success',
-        alerts : 'No alerts found'
-      });
-    }
-
-    res.status(200).json({
-      status : 'success',
-      alerts : alerts
-    });
-
-});
+  var largeDataSet = [];
+  // spawn new child process to call the python script
+  const python = spawn('python', ['script.py',`${target}` ]);
+  // collect data from script
+  python.stdout.on('data', function (data) {
+      console.log('Pipe data from python script ...');
+      largeDataSet.push(data);
+  });
+  // in close event we are sure that stream is from child process is closed
+  python.on('close', (code) => {
+      console.log(`child process close all stdio with code ${code}`);
+      // send data to browser
+      res.send(largeDataSet.join(""))
+  });
+}
