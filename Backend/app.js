@@ -36,12 +36,15 @@ app.use(express.json({
 //Data sanitization against NoSQL query injection
 app.use(mongoSanitize());
 
+//Data sanitization against XSS
+app.use(xssClean());
+
+
 // 3) ROUTES
 app.use("/api/v1/users", userRouter);
 
 //test api start
 
 //test api ends
-
 
 module.exports = app;
