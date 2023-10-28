@@ -6,6 +6,32 @@ const appError = require("../utils/appError");
 const crypto = require('crypto');
 const sendEmail = require('../utils/email');
 
+const sendToken = id => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIRESIN
+    })
+}
+
+const createSendToken = (user, statusCode, res) => {
+    const token = sendToken(user._id);
+
+    res.cookie('jwt', token, {
+        expiresIn: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
+        httpOnly: true
+    })
+
+    //remove password from output
+    user.password = undefined;
+
+    res.status(statusCode).json({
+        status: 'success',
+        token,
+        data: {
+            user
+        }
+    })
+}
+
 exports.signup = catchAsync(async (req, res) => {
 
     const newUser = await User.create({
@@ -15,17 +41,7 @@ exports.signup = catchAsync(async (req, res) => {
         passwordConfirm: req.body.passwordConfirm,
     });
 
-    const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRESIN,
-    });
-
-    res.status(201).json({
-        status: "success",
-        token,
-        data: {
-            user: newUser,
-        },
-    });
+    createSendToken(newUser, 201, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -43,14 +59,7 @@ exports.login = catchAsync(async (req, res, next) => {
     }
 
     //3)send jwt
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRESIN
-    })
-
-    res.status(200).json({
-        status: 'success',
-        token
-    })
+    createSendToken(user, 200, res);
 
 });
 
@@ -142,12 +151,6 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     // 3) update changedPasswordAt property 
 
     // 4) Log the user in, send JWT
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRESIN
-    })
-    res.status(200).json({
-        status: 'success',
-        token
-    })
+    createSendToken(user, 20, res);
     next();
 })

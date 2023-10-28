@@ -8,9 +8,11 @@ const xssClean = require('xss-clean');
 const hpp = require('hpp');
 
 const userRouter = require("./routes/userRoutes");
+const viewRouter = require("./routes/viewRoutes");
 
 const app = express();
 
+//Pug templating engine
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -18,6 +20,9 @@ app.set('views', path.join(__dirname, 'views'));
 
 //set security HTTP headers
 app.use(helmet()); 
+
+//serving static files 
+app.use(express.static(path.join(__dirname, 'public')));
 
 //development logging
 if (process.env.NODE_ENV === 'development') {
@@ -46,11 +51,7 @@ app.use(xssClean());
 
 // 3) ROUTES
 app.use("/api/v1/users", userRouter);
-app.use(express.static(path.join(__dirname, 'public')));
-
-app.get('/', (req, res) => {
-    res.status(200).render('base')
-})
+app.use("/", viewRouter); 
 //test api start
 
 //test api ends

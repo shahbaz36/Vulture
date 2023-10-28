@@ -11,6 +11,7 @@
     "mongoose": "^7.6.3",
     "nodejs": "^0.0.0",
     "nodemon": "^3.0.1",
+    "parcel-bundler": "^1.12.5",
     "xss-clean": "^0.1.4",
     "zaproxy": "^2.0.0-rc.3"
   },
