@@ -4,7 +4,7 @@ from pprint import pprint
 from zapv2 import ZAPv2
 import sys
 
-apiKey = 'ps7a8hs8fbs3pb898p2kvuv2uf';
+apiKey = 'ps78svv227qmk7ctdi77dcjf6m';
 target = sys.argv[1];
 
 # By default ZAP API client will connect to port 8080

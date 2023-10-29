@@ -63,19 +63,43 @@ exports.login = catchAsync(async (req, res, next) => {
 
 });
 
+exports.currentUser = catchAsync(async (req, res, next) => {
+    let token = req.cookies.jwt;
+
+    // 1) If no token move on
+    if (!token) {
+        return next();
+    }
+
+    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    if (!user) {
+        return next(new appError('The user belonging to this token does no longer exist.', 401))
+    }
+    res.status(200).json({
+        status: 'success',
+        data: {
+            user
+        }
+    })
+})
+
 exports.protect = catchAsync(async (req, res, next) => {
     //1) Getting token and check if it's there
     let token;
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1]
+    } else if (req.cookies.jwt) {
+        token = req.cookies.jwt;
     }
+
     if (!token) {
         return next(new appError('You are not logged in! Please log in to get access.', 401))
     }
     //2) Verification token
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET)
     //3) Check if user still exists
-    const currentUser = await User.findById(decoded.userId)
+    const currentUser = await User.findById(decoded.id)
     if (!currentUser) {
         return next(new appError('The user belonging to this token does no longer exist.', 401))
     }
@@ -88,6 +112,37 @@ exports.protect = catchAsync(async (req, res, next) => {
     next();
 });
 
+exports.isLoggedIn = async (req, res, next) => {
+    if (req.cookies.jwt) {
+        try {
+            // 1) verify token
+            const decoded = await promisify(jwt.verify)(
+                req.cookies.jwt,
+                process.env.JWT_SECRET
+            );
+
+            // 2) Check if user still exists
+            const currentUser = await User.findById(decoded.id);
+            if (!currentUser) {
+                return next();
+            }
+
+            // 3) Check if user changed password after the token was issued
+            if (currentUser.changedPasswordAfter(decoded.iat)) {
+                return next();
+            }
+
+            // THERE IS A LOGGED IN USER
+            res.locals.user = currentUser;
+
+            console.log(currentUser);
+            return next();
+        } catch (err) {
+            return next();
+        }
+    }
+    next();
+};
 exports.forgotPassword = catchAsync(async (req, res, next) => {
     // 1) Get user based on POSTed email
     const user = await User.findOne({ email: req.body.email });
